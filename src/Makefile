@@ -10,32 +10,84 @@
 #*****************************************************************************
 
 #------------------------------------------------------------------------------
-# <Put a Description Here>
+# Simple makefile for build systems which support 2 platform: HOST and MSP432
 #
 # Use: make [TARGET] [PLATFORM-OVERRIDES]
 #
 # Build Targets:
-#      <Put a description of the supported targets here>
+# 	<FILE>.i - Builds <FILE>.i preprocessor output file
+# 	<FILE>.asm - Builds <FILE>.asm assembly file
+#	<FILE>.o - Builds <FILE>.o object file
+#       compile-all - Compile all object files, but do not link
+#       build - compile all object files and link into final executable
+#       clean - remote all generated files
 #
 # Platform Overrides:
-#      <Put a description of the supported Overrides here
+#	HOST- Host environment
+#	MSP432 - Target embedded environment
 #
 #------------------------------------------------------------------------------
 include sources.mk
 
-# Platform Overrides
-PLATFORM = 
+PREPROCESSOR:=$(SOURCES:.c=.i)
+ASSEMBLY:=$(SOURCES:.c=.asm) 
+OBJECTS:=$(SOURCES:.c=.o)
+BASENAME = c1m2
+TARGET = $(BASENAME).out
 
-# Architectures Specific Flags
-LINKER_FILE = 
-CPU = 
-ARCH = 
-SPECS = 
+#General flags for both platforms
+CFLAGS = -Wall -Werror -g -O0 -std=c99 
+CPPFLAGS = -E
+LDFLAGS = -Wl,-Map=$(BASENAME).map
 
-# Compiler Flags and Defines
-CC = 
-LD = 
-LDFLAGS = 
-CFLAGS = 
-CPPFLAGs = 
 
+#Platform Overrides
+PLATFORM = HOST
+
+ifeq ($(PLATFORM),HOST)
+
+PLATFORM_TARGET = -DHOST
+CC = gcc
+OBJECTS= main.o memory.o
+
+endif
+
+ifeq ($(PLATFORM),MSP432)
+
+PLATFORM_TARGET = -DMSP432
+CC = arm-none-eabi-gcc
+LD = arm-none-eabi-ld
+
+LINKER_FILE = -I../msp432p401r.lds
+LINKER_FILE_FLAG = -T $(LINKER_FILE) 
+
+#Architecture Specific Flags
+CPU = cortex-m4
+ARCH = armv7e-m
+SPECS = nosys.specs
+CFLAGS_ARCH = -mcpu=$(CPU) -mthumb -march=$(ARCH) -mfloat-abi=hard -mfpu=fpv4-sp-d16 --specs=nosys.specs
+
+endif
+
+#Build rule
+%.i:%.c
+	$(CC) $(CPPFLAGS) $< $(CFLAGS) $(CFLAGS_ARCH) $(PLATFORM_TARGET) $(INCLUDES) -o $@
+
+%.asm:%.c
+	$(CC) -S $< $(CFLAGS) $(CFAGS_ARCH) $(PLATFORM_TARGET) $(INCLUDES) -o $@
+
+%.o:%.c
+	$(CC) -c $< $(CFLAGS) $(CFLAGS_ARCH) $(PLATFORM_TARGET) $(INCLUDES) -o $@
+
+$(TARGET):$(OBJECTS)
+	        $(CC) $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(LINKER_FILE_FLAG) $(INCLUDES) -o $@
+
+.PHONY: compile-all
+compile-all: $(OBJECTS)
+
+.PHONY: build
+build: $(TARGET)
+
+.PHONY: clean
+clean:
+	rm -f $(PREPROCESSOR) $(ASSEMBLY) $(OBJECTS) $(TARGET) $(BASENAME).map

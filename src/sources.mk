@@ -10,8 +10,14 @@
 #*****************************************************************************
 
 # Add your Source files to this variable
-SOURCES =
+SOURCES = ../src/interrupts_msp432p401r_gcc.c\
+	  ../src/main.c\
+	  ../src/memory.c\
+	  ../src/startup_msp432p401r_gcc.c\
+	  ../src/system_msp432p401r.c
 
 # Add your include paths to this variable
-INCLUDES = 
+INCLUDES = -I../include/CMSIS\
+	   -I../include/common\
+	   -I../include/msp432
 
