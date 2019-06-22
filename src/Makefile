@@ -34,7 +34,7 @@ ASSEMBLY:=$(SOURCES:.c=.asm)
 OBJECTS:=$(SOURCES:.c=.o)
 
 ifeq ($(PLATFORM),HOST)
-OBJECTS = main.o memory.o
+OBJECTS = main.o memory.o 
 endif
 
 BASENAME = c1m2
@@ -53,6 +53,7 @@ ifeq ($(PLATFORM),HOST)
 
 PLATFORM_TARGET = -DHOST
 CC = gcc
+SIZE = size
 
 endif
 
@@ -61,6 +62,7 @@ ifeq ($(PLATFORM),MSP432)
 PLATFORM_TARGET = -DMSP432
 CC = arm-none-eabi-gcc
 LD = arm-none-eabi-ld
+SIZE = arm-none-eabi-size
 
 LINKER_FILE = -T ../msp432p401r.lds
 
@@ -84,7 +86,8 @@ endif
 
 $(TARGET):$(OBJECTS)
 	        $(CC) $(OBJECTS) $(CFLAGS) $(CFLAGS_ARCH) $(LDFLAGS) $(LINKER_FILE) $(INCLUDES) -o $@
-
+		$(SIZE) -Btd $(TARGET) $(OBJECTS)
+		
 .PHONY: compile-all
 compile-all: $(OBJECTS) 
 
