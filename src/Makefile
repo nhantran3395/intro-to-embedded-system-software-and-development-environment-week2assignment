@@ -32,6 +32,11 @@ include sources.mk
 PREPROCESSOR:=$(SOURCES:.c=.i)
 ASSEMBLY:=$(SOURCES:.c=.asm) 
 OBJECTS:=$(SOURCES:.c=.o)
+
+ifeq ($(PLATFORM),HOST)
+OBJECTS = main.o memory.o
+endif
+
 BASENAME = c1m2
 TARGET = $(BASENAME).out
 
@@ -48,7 +53,6 @@ ifeq ($(PLATFORM),HOST)
 
 PLATFORM_TARGET = -DHOST
 CC = gcc
-OBJECTS= main.o memory.o
 
 endif
 
@@ -58,8 +62,7 @@ PLATFORM_TARGET = -DMSP432
 CC = arm-none-eabi-gcc
 LD = arm-none-eabi-ld
 
-LINKER_FILE = -I../msp432p401r.lds
-LINKER_FILE_FLAG = -T $(LINKER_FILE) 
+LINKER_FILE = -T ../msp432p401r.lds
 
 #Architecture Specific Flags
 CPU = cortex-m4
@@ -74,16 +77,16 @@ endif
 	$(CC) $(CPPFLAGS) $< $(CFLAGS) $(CFLAGS_ARCH) $(PLATFORM_TARGET) $(INCLUDES) -o $@
 
 %.asm:%.c
-	$(CC) -S $< $(CFLAGS) $(CFAGS_ARCH) $(PLATFORM_TARGET) $(INCLUDES) -o $@
+	$(CC) -S $< $(CFLAGS) $(CFLAGS_ARCH) $(PLATFORM_TARGET) $(INCLUDES) -o $@
 
 %.o:%.c
 	$(CC) -c $< $(CFLAGS) $(CFLAGS_ARCH) $(PLATFORM_TARGET) $(INCLUDES) -o $@
 
 $(TARGET):$(OBJECTS)
-	        $(CC) $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(LINKER_FILE_FLAG) $(INCLUDES) -o $@
+	        $(CC) $(OBJECTS) $(CFLAGS) $(CFLAGS_ARCH) $(LDFLAGS) $(LINKER_FILE) $(INCLUDES) -o $@
 
 .PHONY: compile-all
-compile-all: $(OBJECTS)
+compile-all: $(OBJECTS) 
 
 .PHONY: build
 build: $(TARGET)
