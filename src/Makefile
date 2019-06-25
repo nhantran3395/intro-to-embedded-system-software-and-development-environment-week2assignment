@@ -29,20 +29,15 @@
 #------------------------------------------------------------------------------
 include sources.mk
 
-PREPROCESSOR:=$(SOURCES:.c=.i)
-ASSEMBLY:=$(SOURCES:.c=.asm) 
-OBJECTS:=$(SOURCES:.c=.o)
-
-ifeq ($(PLATFORM),HOST)
-OBJECTS = main.o memory.o 
-endif
+OBJECTS=$(SOURCES:.c=.o)
+DEPENDENCIES=$(SOURCES:.c=.d)
 
 BASENAME = c1m2
 TARGET = $(BASENAME).out
 
 #General flags for both platforms
-CFLAGS = -Wall -Werror -g -O0 -std=c99 
-CPPFLAGS = -E
+CFLAGS = -Wall -Werror -g -O0 -std=c99 -MD
+CPPFLAGS = -E 
 LDFLAGS = -Wl,-Map=$(BASENAME).map
 
 
@@ -96,4 +91,4 @@ build: $(TARGET)
 
 .PHONY: clean
 clean:
-	rm -f $(PREPROCESSOR) $(ASSEMBLY) $(OBJECTS) $(TARGET) $(BASENAME).map
+	rm -f *.o *.d *.asm *.i  $(TARGET) $(BASENAME).map
